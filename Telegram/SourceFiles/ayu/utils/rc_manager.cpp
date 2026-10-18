@@ -12,8 +12,8 @@
 
 namespace {
 
-constexpr auto kPrimaryUrl = "https://update.ayugram.one/rc/current/desktop2";
-constexpr auto kExteraUrl = "https://api.exteragram.app/api/v1/profiles/compact";
+constexpr auto kPrimaryUrl = "";
+constexpr auto kExteraUrl = "";
 constexpr auto kFetchTimeout = 15 * 1000;
 
 }
@@ -31,48 +31,17 @@ std::unordered_set<ID> default_channels = {
 };
 
 void RCManager::start() {
-	DEBUG_LOG(("RCManager: starting"));
-	_manager = std::make_unique<QNetworkAccessManager>();
-
-	makeRequest();
-
-	_timer = new QTimer(this);
-	connect(_timer, &QTimer::timeout, this, &RCManager::makeRequest);
-	_timer->start(60 * 60 * 1000); // 1 hour
+	// Privacy patch: Disable all third-party telemetry / remote config pings
+	initialized = true;
 }
 
 void RCManager::makeRequest() {
-	_retryAttempted = false;
-	sendRequest();
 }
 
 void RCManager::sendRequest() {
-	if (!_manager) {
-		return;
-	}
-
-	const auto url = QString::fromLatin1(_useExteraFallback ? kExteraUrl : kPrimaryUrl);
-	LOG(("RCManager: requesting map"));
-
-	clearSentRequest();
-
-	auto request = QNetworkRequest(QUrl(url));
-	request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
-	request.setTransferTimeout(kFetchTimeout);
-	_reply = _manager->get(request);
-	connect(_reply,
-			&QNetworkReply::finished,
-			[=]
-			{
-				gotResponse();
-			});
-	connect(_reply,
-			&QNetworkReply::errorOccurred,
-			[=](auto e)
-			{
-				gotFailure(e);
-			});
+	return;
 }
+
 
 bool RCManager::tryRetryWithExteraFallback() {
 	if (_retryAttempted || _useExteraFallback) {
